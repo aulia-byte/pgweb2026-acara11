@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web GIS Flores Timur - GeoServer & LeafletJS</title>
+
+    <!-- CSS Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            width: 100%;
+            height: 100vh;
+        }
+
+        .Legend {
+            background: white;
+            padding: 6px 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.25);
+            max-height: 20vh;
+            overflow-y: auto;
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <div id="map"></div>
+
+    <!-- JS Leaflet & Plugin L.Geoserver.js -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="lib/L.Geoserver.js"></script>
+
+    <script>
+        // 1. Inisialisasi Peta (Flores Timur)
+        var map = L.map("map").setView([-8.3249682, 123.0053329], 10);
+
+        // 2. Basemap OpenStreetMap dan Esri World Imagery
+        var osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        });
+        osm.addTo(map);
+
+        var esriImagery = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+            maxZoom: 19,
+            attribution: "Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community",
+        });
+
+        // 3. Layer WMS 1: Batas Kecamatan
+        var wmsLayer1 = L.Geoserver.wms("http://localhost:8080/geoserver/wms", {
+            layers: "pgweb1:batas_kecamatan",
+            transparent: true,
+        });
+        wmsLayer1.addTo(map);
+
+        // 4. Layer WMS 2: Jaringan Jalan
+        var wmsLayer2 = L.Geoserver.wms("http://localhost:8080/geoserver/wms", {
+            layers: "pgweb1:jalan",
+            transparent: true,
+        });
+        wmsLayer2.addTo(map);
+
+        // 5. Layer WMS 3: Toponimi (Titik)
+        var wmsLayer3 = L.Geoserver.wms("http://localhost:8080/geoserver/wms", {
+            layers: "pgweb1:toponimi1",
+            transparent: true,
+        });
+        wmsLayer3.addTo(map);
+
+        // 6. Menampilkan Legenda Batas Kecamatan, Jalan, dan Toponimi
+        var layerLegend1 = L.Geoserver.legend("http://localhost:8080/geoserver", {
+            layers: "pgweb1:batas_kecamatan",
+        });
+        layerLegend1.addTo(map);
+
+        var layerLegend2 = L.Geoserver.legend("http://localhost:8080/geoserver", {
+            layers: "pgweb1:jalan",
+        });
+        layerLegend2.addTo(map);
+
+        var layerLegend3 = L.Geoserver.legend("http://localhost:8080/geoserver", {
+            layers: "pgweb1:toponimi1",
+        });
+        layerLegend3.addTo(map);
+
+        // 7. Layer Control
+        var baseMaps = {
+            "OpenStreetMap": osm,
+            "Esri Imagery": esriImagery
+        };
+
+        var overlayMaps = {
+            "Batas Kecamatan": wmsLayer1,
+            "Jalan": wmsLayer2,
+            "Toponimi": wmsLayer3
+        };
+
+        var layerControl = L.control.layers(baseMaps, overlayMaps).addTo(map);
+    </script>
+
+</body>
+
+</html>
